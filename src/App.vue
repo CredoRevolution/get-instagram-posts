@@ -7,13 +7,21 @@
       <button class="get-posts-button" @click.prevent="getPosts">
         getPosts
       </button>
+      <div class="inst-acc">
+        <p>{{ instAcc.accUsername }}</p>
+        <img
+          :src="instAcc.accProfilePic"
+          width="200"
+          height="200"
+          style="border-radius: 50%"
+        />
+      </div>
       <div v-if="posts.length" class="posts">
         <div v-for="post in posts" :key="post.id" class="post">
           <img :src="post.media_url" width="200" height="200" />
           <p>{{ post.caption }}</p>
         </div>
       </div>
-      <div v-else class="no-posts">Постов нет</div>
     </div>
   </div>
 </template>
@@ -30,7 +38,12 @@ export default {
       authorised: false,
       posts: [],
       accessToken:
-        'IGQWRNcHhHNVlrNmh4anJqbVlkMTlUNElXX0pKLWZABX24zeEpvWlREWXlMM01VbmVTaEJJLW9NczYzT3ljUHFvMjR3OThLdGpkLWd2ZA19GVW04N2NlTEtqSVpzZADhGZAm95bGZAaLWlCSndneWNWM3QyWlFVY2FFWmMZD',
+        'EAAVwTXWVWzsBO28ZC6ZCQyJdcV2Arojif9X6MSEFl66yuSZAtCi2UFHJ7FSiDzLdIx7wKqE2HcyKSemfMjVBbxUgzZBE1BqjH7AsYHCjNSD4uL43cCHCuNEMy2CNI8r1ZCUUScK30lIGvgiCNVs4VPbtZAOf0YbQETTDRFn36MC7CVtT8kFfdbYvhXgxZBh9GavD7ygLy5JfEeHXJvCWQZDZD',
+      instAcc: {
+        accId: '',
+        accUsername: '',
+        accProfilePic: '',
+      },
     }
   },
   methods: {
@@ -45,7 +58,7 @@ export default {
           this.statusChangeCallback(facebookResponse)
         },
         {
-          scope: 'user_photos',
+          scope: 'public_profile,instagram_basic',
         }
       )
     },
@@ -67,31 +80,49 @@ export default {
       }
       axios
         .get(
-          `https://graph.instagram.com/v14.0/me/media?fields=id,caption,media_url&access_token=${this.accessToken}`,
+          `https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account{id,name,username,profile_picture_url}&access_token=${this.accessToken}`,
           {
             headers: {
               'Content-Type': 'application/json',
             },
           }
         )
+
         .then((response) => {
-          console.log('axios response', response)
-          if (response.data && response.data.error) {
-            console.error(response.data.error)
-          } else if (response.data && !response.data.error) {
-            console.log(response.data)
-            this.posts = response.data.data
-          }
+          this.instAcc.accId =
+            response.data.data[0].instagram_business_account.id
+          this.instAcc.accUsername =
+            response.data.data[0].instagram_business_account.username
+          this.instAcc.accProfilePic =
+            response.data.data[0].instagram_business_account.profile_picture_url
         })
         .catch((error) => {
           console.error(error)
+        })
+
+        .then(() => {
+          axios
+            .get(
+              `https://graph.facebook.com/v19.0/${this.instAcc.accId}/media?fields=media_url,caption&access_token=${this.accessToken}`,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              }
+            )
+            .then((response) => {
+              this.posts = response.data.data
+            })
+            .catch((error) => {
+              console.error(error)
+            })
         })
     },
   },
   mounted() {
     window.fbAsyncInit = function () {
       FB.init({
-        appId: '738688201743899',
+        appId: '1530852871068475',
         cookie: true,
         xfbml: true,
         version: 'v19.0',
@@ -115,12 +146,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 .app {
   display: flex;
   justify-content: center;
-  align-items: center;
   flex-direction: column;
-  height: 100vh;
 }
 
 .login-button {
@@ -153,8 +188,7 @@ export default {
   gap: 10px;
   padding: 10px;
   background: #fafafa;
-  border: 1px solid #3b5998;
-  border-radius: 3px;
+  justify-content: center;
 }
 
 .post {
@@ -173,5 +207,17 @@ export default {
   background: #fafafa;
   border: 1px solid #3b5998;
   border-radius: 3px;
+}
+
+.inst-acc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-direction: column;
+  justify-content: center p {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+  }
 }
 </style>
