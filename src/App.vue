@@ -37,8 +37,7 @@ export default {
     return {
       authorised: false,
       posts: [],
-      accessToken:
-        'EAAVwTXWVWzsBOz4q4wovvmqD1ZCxVtZBBY6sHIffJklqP3JtinZACs0IOnDIFZAuZBA9BcvWvZAzCKeZBotSnduvCleWZAZAu2ZA0wDv2QmfbpL0puLops93Ttj6YCQH8orWgv3JaFOnorc59FArKzl2qXU21bRwXff1PR8NOUac0YWzm3NCWTs6k7Nlkaba3uhcNEaZAdtR4wUZAFZAo3uZAfeAZDZD',
+      accessToken: '',
       instAcc: {
         accId: '',
         accUsername: '',
@@ -67,6 +66,7 @@ export default {
         console.log('connected')
         // Logged into your app and Facebook.
         this.authorised = true
+        this.accessToken = facebookResponse.authResponse.accessToken
       } else if (facebookResponse.status === 'not_authorized') {
         console.log('not_authorized')
         // The person is logged into Facebook, but not your app.
@@ -89,12 +89,10 @@ export default {
         )
 
         .then((response) => {
-          this.instAcc.accId =
-            response.data.data[0].instagram_business_account.id
-          this.instAcc.accUsername =
-            response.data.data[0].instagram_business_account.username
-          this.instAcc.accProfilePic =
-            response.data.data[0].instagram_business_account.profile_picture_url
+          const instAcc = response.data.data[0].instagram_business_account
+          this.instAcc.accId = instAcc.id
+          this.instAcc.accUsername = instAcc.username
+          this.instAcc.accProfilePic = instAcc.profile_picture_url
         })
         .catch((error) => {
           console.error(error)
